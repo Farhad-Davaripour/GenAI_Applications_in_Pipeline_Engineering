@@ -189,6 +189,7 @@ if authentication_status:
                     st.markdown(step_output.dict()["output"].response)
 
             # display the final response
+            st.subheader("Final Answer:")
             st.markdown(step_output.dict()["output"].response)
 
             st.subheader("Reasoning:")
