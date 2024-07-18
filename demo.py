@@ -206,4 +206,4 @@ elif authentication_status == False:
     st.error("Username/password is incorrect")
 
 elif authentication_status == None:
-    st.warning("Please enter your username and password or send me an email to get temporary access at <span style='color:blue; font-weight:bold;'>farhad.davaripour@gmail.com</span>.")
+    st.warning("Please enter your username and password or send me an email to get temporary access at farhad.davaripour@gmail.com")
