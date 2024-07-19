@@ -18,7 +18,7 @@ import importlib
 from src import tools, prompt_temp
 importlib.reload(tools)
 importlib.reload(prompt_temp)
-from src.tools import get_nodes, calculate_circumferential_stress, decrypt_data
+from src.tools import get_nodes, calculate_circumferential_stress, calculate_thermal_stress, decrypt_data
 from src.prompt_temp import react_system_prmopt
 
 from dotenv import load_dotenv
@@ -62,7 +62,9 @@ if authentication_status:
 
     # Set the embeddings and generative models
     embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-    llm = OpenAI(model="gpt-4o")
+    LLM_model = st.sidebar.selectbox("Select the LLM model", ["gpt-4o", 'gpt-3.5-turbo'])
+    print(f"Selected LLM model: {LLM_model}")
+    llm = OpenAI(model=LLM_model)
 
     Settings.embed_model = embed_model
     Settings.llm = llm
@@ -146,9 +148,16 @@ if authentication_status:
         description="Calculates the circumferential (hoop) stress in a pipeline based on CSA Z662 standard, given the design pressure, outside diameter, and pipe nominal wall thickness less allowances.",
     )
 
+    # Create the thermal stress calculator tool
+    thermal_stress_tool = FunctionTool.from_defaults(
+        fn=calculate_thermal_stress,
+        name="thermal_stress_calculator",
+        description="Calculates the combined thermal stress in a pipeline based on CSA Z662 standard, given the design pressure, outside diameter, pipe nominal wall thickness, Poisson's ratio, modulus of elasticity, linear coefficient of thermal expansion, maximum design temperature, and pipe metal temperature at the time of restraint."
+    )
+
     # Create the ReAct agent and add the tools
     agent = ReActAgent.from_tools(
-        [CSA_pipe_design_standard, circumferential_stress_tool], llm=llm, verbose=True
+        [CSA_pipe_design_standard, circumferential_stress_tool, thermal_stress_tool], llm=llm, verbose=True
     )
 
     # =============================================================================

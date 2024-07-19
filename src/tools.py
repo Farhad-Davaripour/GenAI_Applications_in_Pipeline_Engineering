@@ -8,6 +8,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 from cryptography.fernet import Fernet, InvalidToken
 import os
+import math
 
 
 def get_nodes(docs):
@@ -38,6 +39,38 @@ def calculate_circumferential_stress(P, D, t_n):
     """
     S_h = (P * D) / (2 * t_n)
     return S_h
+
+def calculate_thermal_stress(P, D, t_n, v, E_c, alpha, T_2, T_1):
+    """
+    Calculate the combined thermal stress in unrestrained portions of pipeline systems
+    based on CSA Z662 standard equations.
+
+    Args:
+    P (float): Design pressure of the pipeline (in MPa)
+    D (float): Outside diameter of the pipe (in mm)
+    t_n (float): Pipe nominal wall thickness, less allowances (in mm)
+    v (float): Poisson’s ratio
+    E_c (float): Modulus of elasticity of steel (in MPa)
+    alpha (float): Linear coefficient of thermal expansion (in °C^-1)
+    T_2 (float): Maximum design temperature (in °C)
+    T_1 (float): Pipe metal temperature at the time of restraint (in °C)
+
+    Returns:
+    float: Combined stress due to thermal expansion (in MPa)
+    """
+    # Calculate circumferential (hoop) stress
+    S_h = (P * D) / (2 * t_n)
+    
+    # Calculate longitudinal stress due to thermal expansion
+    S_z = v * S_h - E_c * alpha * (T_2 - T_1)
+    
+    # Calculate circumferential stress due to thermal expansion
+    S_y = S_h
+    
+    # Calculate combined thermal stress
+    S_t = math.sqrt(S_z**2 + 4 * S_y**2)
+    
+    return S_t
 
 
 def generate_key(password: str, salt: bytes) -> bytes:

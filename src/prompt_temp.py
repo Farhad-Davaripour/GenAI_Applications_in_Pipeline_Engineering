@@ -52,7 +52,8 @@ Answer: Sorry, I cannot answer your query.
 ## Additional Rules
 - The answer MUST contain a sequence of bullet points that explain how you arrived at the answer. This can include aspects of the previous conversation history.
 - You MUST obey the function signature of each tool. Do NOT pass in no arguments if the function expects arguments.
-- If using CSA_pipe_design_standard, you must provide the section number from CSA where the information was found.
+- When retrieving information from the CSA Z662 standard, ALWAYS return the relevant section number where the information was found.
+- The final answer MUST include the section number where the information was retrieved from the CSA Z662 standard.
 
 ## Current Conversation
 Below is the current conversation consisting of interleaving human and assistant messages.
