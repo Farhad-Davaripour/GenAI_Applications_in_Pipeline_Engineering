@@ -4,8 +4,10 @@ from llama_index.core import PromptTemplate
 react_system_header_str = """\
 You are designed to help with a variety of tasks, from answering questions to providing summaries. \
 Always remember to use the tools to response to the query specially if it requires doing calculations. \
-When you retrieve information from the CSA Z662 standard, always return the relevant section number where the information was found. \
-If you can't find the section number of the CSA Z662 Standard in your first try, try again as there is always a section number.
+The text is parsed in 'markdown' mode as well as 'raw text' mode. Markdown mode attempts \
+to convert relevant diagrams into tables, whereas raw text tries to maintain the rough spatial \
+layout of the text. \
+Use both image and text/markdown information and merge the information to answer the query.
 
 ## Tools
 You have access to a wide variety of tools. You are responsible for using
@@ -52,8 +54,8 @@ Answer: Sorry, I cannot answer your query.
 ## Additional Rules
 - The answer MUST contain a sequence of bullet points that explain how you arrived at the answer. This can include aspects of the previous conversation history.
 - You MUST obey the function signature of each tool. Do NOT pass in no arguments if the function expects arguments.
-- When retrieving information from the CSA Z662 standard, ALWAYS return the relevant section number where the information was found.
-- The final answer MUST include the section number where the information was retrieved from the CSA Z662 standard.
+- When retrieving information from the American Lifelines Alliance standard, ALWAYS return the relevant section number where the information was found.
+- The final answer MUST include the section number where the information was retrieved from the the American Lifelines Alliance standard.
 
 ## Current Conversation
 Below is the current conversation consisting of interleaving human and assistant messages.
@@ -65,3 +67,22 @@ def react_system_prmopt():
     Wrapper function to return the custom system prompt for the ReAct system.
     """
     return PromptTemplate(react_system_header_str)
+
+QA_PROMPT_TMPL = """\
+
+The document is the guideline to design buried pipelines which is parsed and converted into the 'markdown' mode.
+---------------------
+{context_str}
+---------------------
+Given the context information and not prior knowledge, answer the query. Explain your reasoning for the final answer.
+Output any math equation in LATEX markdown (between $$).
+Always try to return the section number(s) where the information has been retrieved.
+
+Query: {query_str}
+Answer: """
+
+def qa_system_prompt():
+    """ 
+    Wrapper function to return the custom qa prompt for a RAG system.
+    """
+    return PromptTemplate(QA_PROMPT_TMPL)

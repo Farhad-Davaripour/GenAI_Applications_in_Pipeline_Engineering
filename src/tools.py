@@ -1,102 +1,54 @@
-import nest_asyncio
-nest_asyncio.apply()
-from copy import deepcopy
-from llama_index.core.schema import TextNode
-import base64
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
-from cryptography.fernet import Fernet, InvalidToken
-import os
-import math
+from llama_index.core.query_engine import CustomQueryEngine
+from llama_index.multi_modal_llms.openai import OpenAIMultiModal
+from llama_index.core.schema import TextNode, ImageNode, NodeWithScore, MetadataMode
+from llama_index.core.prompts import PromptTemplate
+from llama_index.core.base.response.schema import Response
+from llama_index.core.vector_stores import (
+    MetadataFilter,
+    MetadataFilters,
+    FilterOperator,
+)
+from llama_index.core import (
+    StorageContext,
+    load_index_from_storage,
+)
 
+# import importlib
+# from src import prompt_temp
+# importlib.reload(prompt_temp)
+from src.prompt_temp import qa_system_prompt
 
-def get_nodes(docs):
-    """Split docs into nodes, by separator."""
-    nodes = []
-    for doc in docs:
-        doc_chunks = doc.text.split("\n---\n")
-        for doc_chunk in doc_chunks:
-            node = TextNode(
-                text=doc_chunk,
-                metadata=deepcopy(doc.metadata),
-            )
-            nodes.append(node)
+from llama_index.core import Settings
+from llama_index.embeddings.openai import OpenAIEmbedding
+embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
-    return nodes
+from llama_index.llms.openai import OpenAI as llma_OpenAI
+llm = llma_OpenAI(model="gpt-4o")
 
-def calculate_circumferential_stress(P, D, t_n):
-    """
-    Calculate the circumferential (hoop) stress in a pipeline based on CSA Z662 standard (Section 4.8.3).
+Settings.llm = llm
+Settings.embed_model = embed_model
+
+# build storage context
+storage_context = StorageContext.from_defaults(persist_dir="storage_nodes")
+# load index
+index = load_index_from_storage(storage_context, index_id="vector_index")
+
+class MARKDOWN_QUERY_ENGINE(CustomQueryEngine):
+
+    qa_prompt: PromptTemplate
+
+    def __init__(self, qa_prompt = qa_system_prompt(), **kwargs) -> None:
+        super().__init__(qa_prompt=qa_prompt, **kwargs)
+
+    def custom_query(self, query_str: str):
+        retriever = index.as_retriever(similarity_top_k=5)
+        # retrieve text nodes
+        text_nodes = retriever.retrieve(query_str)
+
+        context_str = "\n\n".join(
+                    [r.get_content(metadata_mode=MetadataMode.LLM) for r in text_nodes]
+                )
+        fmt_prompt = self.qa_prompt.format(context_str=context_str, query_str=query_str)
+        llm_response = llm.complete(prompt=fmt_prompt)
+        return Response(response=str(llm_response), source_nodes=text_nodes)
     
-    Args:
-    P (float): Design pressure of the pipeline (in MPa)
-    D (float): Outside diameter of the pipe (in mm)
-    t_n (float): Pipe nominal wall thickness, less allowances (in mm)
-    
-    Returns:
-    float: Circumferential (hoop) stress (in MPa)
-    """
-    S_h = (P * D) / (2 * t_n)
-    return S_h
-
-def calculate_thermal_stress(P, D, t_n, v, E_c, alpha, T_2, T_1):
-    """
-    Calculate the combined thermal stress in unrestrained portions of pipeline systems
-    based on CSA Z662 standard equations.
-
-    Args:
-    P (float): Design pressure of the pipeline (in MPa)
-    D (float): Outside diameter of the pipe (in mm)
-    t_n (float): Pipe nominal wall thickness, less allowances (in mm)
-    v (float): Poisson’s ratio
-    E_c (float): Modulus of elasticity of steel (in MPa)
-    alpha (float): Linear coefficient of thermal expansion (in °C^-1)
-    T_2 (float): Maximum design temperature (in °C)
-    T_1 (float): Pipe metal temperature at the time of restraint (in °C)
-
-    Returns:
-    float: Combined stress due to thermal expansion (in MPa)
-    """
-    # Calculate circumferential (hoop) stress
-    S_h = (P * D) / (2 * t_n)
-    
-    # Calculate longitudinal stress due to thermal expansion
-    S_z = v * S_h - E_c * alpha * (T_2 - T_1)
-    
-    # Calculate circumferential stress due to thermal expansion
-    S_y = S_h
-    
-    # Calculate combined thermal stress
-    S_t = math.sqrt(S_z**2 + 4 * S_y**2)
-    
-    return S_t
-
-
-def generate_key(password: str, salt: bytes) -> bytes:
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=390000,
-        backend=default_backend()
-    )
-    key = kdf.derive(password.encode())
-    return key
-
-def encrypt_data(data: bytes, password: str) -> bytes:
-    salt = os.urandom(16)  # Generate new salt for each encryption
-    key = generate_key(password, salt)
-    cipher = Fernet(base64.urlsafe_b64encode(key))
-    encrypted_data = cipher.encrypt(data)
-    return salt + encrypted_data  # Prepend salt to encrypted data for storage
-
-def decrypt_data(encrypted_data: bytes, password: str) -> bytes:
-    salt = encrypted_data[:16]  # Extract the salt
-    key = generate_key(password, salt)
-    cipher = Fernet(base64.urlsafe_b64encode(key))
-    try:
-        decrypted_data = cipher.decrypt(encrypted_data[16:])  # Remove the salt
-        return decrypted_data
-    except InvalidToken:
-        raise ValueError("Incorrect password or corrupted data")
