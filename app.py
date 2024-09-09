@@ -14,8 +14,7 @@ from llama_index.core.agent import ReActAgent
 
 from llama_index.llms.openai import OpenAI as llma_OpenAI
 
-model_type = st.sidebar.selectbox("Select Model", ["gpt-4o-mini", "gpt-4o"])
-llm = llma_OpenAI(model=model_type)
+llm = llma_OpenAI(model="gpt-4o")
 Settings.llm = llm
 
 def ReAct_Agent():
