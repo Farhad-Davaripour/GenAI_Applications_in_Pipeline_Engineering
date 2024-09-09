@@ -8,14 +8,16 @@ from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 # importlib.reload(prompt_temp)
 from src.tools import MARKDOWN_QUERY_ENGINE
 from src.prompt_temp import qa_system_prompt, react_system_prmopt
+
 from llama_index.core.tools import QueryEngineTool
 from llama_index.core.agent import ReActAgent
 
 from llama_index.llms.openai import OpenAI as llma_OpenAI
-llm = llma_OpenAI(model="gpt-4o")
+
+model_type = st.sidebar.selectbox("Select Model", ["gpt-4o-mini", "gpt-4o"])
+llm = llma_OpenAI(model=model_type)
 Settings.llm = llm
 
-@ st.cache_resource()
 def ReAct_Agent():
 
     gpt_4o = OpenAIMultiModal(model="gpt-4o", max_new_tokens=200)
@@ -43,7 +45,12 @@ def ReAct_Agent():
     agent.reset()
     return agent
 
-st.title("ALA2005 Pipeline Design Guideline Augmented with a ReAct Agent")
+st.title("Pipe Design Agent")
+st.markdown("""This application assists Pipeline engineers in retrieving specific information from the ALA2005 pipe design standard 
+        ([American Lifelines Alliance 2005: Guidelines for the Design of Buried Steel Pipe](https://www.americanlifelinesalliance.com/pdf/Update061305.pdf))
+        and performing calculations related to the different sections of the guideline. The app leverages a ReAct (Reasoning and Acting) Agentic
+        Workflow to split the user query into smaller pieces and execute them sequentially or in parallel to answer.
+        It utilizes `Retrieval Augmented Generation (RAG)` for question answering and contextual information retrieval and `Function Calling` to perform calculations.""")
 
 query_str = 'How to calculate axial stiffness of soil springs?'
 query = st.text_input("**Enter your query:**", query_str)
