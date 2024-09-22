@@ -2,6 +2,7 @@
 
 [![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://genai-applications-in-pipeline-engineering.streamlit.app/).
 
+
 This Streamlit application assists users in retrieving specific information from the ALA2005 pipe design standard ([American Lifelines Alliance 2005: Guidelines for the Design of Buried Steel Pipe](https://www.americanlifelinesalliance.com/pdf/Update061305.pdf)) and performing calculations related to the different sections of the guideline. The app leverages a ReAct (Reasoning and Acting) Agentic Workflow to split the user query into smaller pieces and execute them sequentially or in parallel to answer. It utilizes `Retrieval Augmented Generation (RAG)` for question answering and contextual information retrieval and `Function Calling` to perform calculations.
 
 ## Important Notes

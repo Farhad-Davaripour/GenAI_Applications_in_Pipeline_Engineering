@@ -1,48 +1,63 @@
+# Import necessary libraries and modules
 import streamlit as st
+import importlib
+
+# Llama Index core and OpenAI multi-modal LLM dependencies
 from llama_index.core import Settings
 from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 
-# import importlib
-# from src import tools, prompt_temp
-# importlib.reload(tools)
-# importlib.reload(prompt_temp)
-from src.tools import MARKDOWN_QUERY_ENGINE
-from src.prompt_temp import qa_system_prompt, react_system_prmopt
+# Reload custom modules after import
+from src import tools, prompt_temp
+importlib.reload(tools)
+importlib.reload(prompt_temp)
 
-from llama_index.core.tools import QueryEngineTool
+# Import specific tools and prompt templates from custom modules
+from src.tools import MARKDOWN_QUERY_ENGINE, calculate_axial_soil_force
+from src.prompt_temp import qa_system_prompt, react_system_prompt as RA_SYSTEM_PROMPT
+
+# Import tools and agent framework from Llama Index
+from llama_index.core.tools import QueryEngineTool, FunctionTool
 from llama_index.core.agent import ReActAgent
 
+# Import OpenAI LLM wrapper from Llama Index
 from llama_index.llms.openai import OpenAI as llma_OpenAI
 
+# Initialize the LLM and set it in Settings
 llm = llma_OpenAI(model="gpt-4o")
 Settings.llm = llm
 
-def ReAct_Agent():
+gpt_4o = OpenAIMultiModal(model="gpt-4o", max_new_tokens=400)
+query_engine = MARKDOWN_QUERY_ENGINE(
+    qa_prompt = qa_system_prompt(), multi_modal_llm=gpt_4o
+)
 
-    gpt_4o = OpenAIMultiModal(model="gpt-4o", max_new_tokens=200)
-    query_engine = MARKDOWN_QUERY_ENGINE(
-        qa_prompt = qa_system_prompt(), multi_modal_llm=gpt_4o
+pipe_design_guideline_tool = QueryEngineTool.from_defaults(
+    query_engine=query_engine,
+    name="ALA_pipe_design_guideline",
+    description=(
+        "Provides access to the ALA Guidelines for the Design of Buried Steel Pipe, developed by FEMA and ASCE. "
+        "Covers design provisions for evaluating buried steel pipelines under various loads, including internal pressure, earth loads, buoyancy, "
+        "thermal expansion, and seismic effects. Includes hand calculation equations and finite element analysis guidance. "
+        "Focused on delivering information from this guideline."
     )
-    
-    pipe_design_guideline_tool = QueryEngineTool.from_defaults(
-        query_engine=query_engine,
-        name="pipe_design_guideline",
-        description=(
-            "This is a guideline for the design of brined steel pipelines."
-        ),
-    )
-    agent = ReActAgent.from_tools(
-        [pipe_design_guideline_tool], llm=llm, verbose=True
-    )
-    # Load a custom system prompt
-    react_system_prompt = react_system_prmopt()
+)
 
-    # Update the agent with the custom system prompt
-    agent.update_prompts({"agent_worker:system_prompt": react_system_prompt})
+# Create the axial soil force calculator tool
+axial_soil_force_tool = FunctionTool.from_defaults(
+    fn=calculate_axial_soil_force,
+    name="axial_soil_force_calculator",
+    description="Calculates the maximum axial soil force per unit length of a buried pipeline based on the American Lifelines Alliance (ALA) 2005 guidelines. This tool performs the calculation using the pipe outside diameter, soil cohesion, depth to pipe centerline, effective unit weight of soil, adhesion factor, coefficient of earth pressure at rest, and the interface friction angle between the pipe and soil. For detailed explanations, derivations, and the full context of the equation, refer to the relevant sections of the ALA guidelines."
+)
 
-    # Reset the agent
-    agent.reset()
-    return agent
+agent = ReActAgent.from_tools(
+    [pipe_design_guideline_tool, axial_soil_force_tool], 
+    llm=llm, verbose=True
+)
+# Load a custom system prompt
+react_system_prompt = RA_SYSTEM_PROMPT()
+
+# Update the agent with the custom system prompt
+agent.update_prompts({"agent_worker:system_prompt": react_system_prompt})
 
 st.title("Pipe Design Agent")
 st.markdown("""This application assists Pipeline engineers in retrieving specific information from the ALA2005 pipe design standard 
@@ -51,11 +66,13 @@ st.markdown("""This application assists Pipeline engineers in retrieving specifi
         Workflow to split the user query into smaller pieces and execute them sequentially or in parallel to answer.
         It utilizes `Retrieval Augmented Generation (RAG)` for question answering and contextual information retrieval and `Function Calling` to perform calculations.""")
 
-query_str = 'How to calculate axial stiffness of soil springs?'
-query = st.text_input("**Enter your query:**", query_str)
+query_str = """1. How to calculate the maximum axial soil spring force on a buried pipeline using ALA design guidelines? 
+2. Calculate the maximum axial soil force for a 35-inch buried pipeline at a burial depth of 1.5 m. Assume cohesion of 25 kpa and fiction angle of 20 deg.
+"""
+
+query = st.text_area("**Enter your query:**", query_str)
 
 # Create a task
-agent = ReAct_Agent()
 task = agent.create_task(query)
 
 # Iterate over the thought, action, and observation steps to complete the task

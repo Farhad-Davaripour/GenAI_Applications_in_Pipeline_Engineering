@@ -1,29 +1,30 @@
+# Import standard libraries
+import math
+import importlib
+
+# Llama Index core dependencies
+from llama_index.core import Settings, StorageContext, load_index_from_storage
 from llama_index.core.query_engine import CustomQueryEngine
-from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 from llama_index.core.schema import TextNode, ImageNode, NodeWithScore, MetadataMode
 from llama_index.core.prompts import PromptTemplate
 from llama_index.core.base.response.schema import Response
-from llama_index.core.vector_stores import (
-    MetadataFilter,
-    MetadataFilters,
-    FilterOperator,
-)
-from llama_index.core import (
-    StorageContext,
-    load_index_from_storage,
-)
+from llama_index.core.vector_stores import MetadataFilter, MetadataFilters, FilterOperator
 
-# import importlib
-# from src import prompt_temp
-# importlib.reload(prompt_temp)
+# Llama Index multi-modal LLM and embedding dependencies
+from llama_index.multi_modal_llms.openai import OpenAIMultiModal
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+# Reload and import custom modules
+from src import prompt_temp
+importlib.reload(prompt_temp)
 from src.prompt_temp import qa_system_prompt
 
-from llama_index.core import Settings
-from llama_index.embeddings.openai import OpenAIEmbedding
-embed_model = OpenAIEmbedding(model="text-embedding-3-large")
-
+# Llama Index OpenAI LLM initialization
 from llama_index.llms.openai import OpenAI as llma_OpenAI
 llm = llma_OpenAI(model="gpt-4o")
+
+# Initialize the OpenAI embedding model
+embed_model = OpenAIEmbedding(model="text-embedding-3-large")
 
 Settings.llm = llm
 Settings.embed_model = embed_model
@@ -51,4 +52,32 @@ class MARKDOWN_QUERY_ENGINE(CustomQueryEngine):
         fmt_prompt = self.qa_prompt.format(context_str=context_str, query_str=query_str)
         llm_response = llm.complete(prompt=fmt_prompt)
         return Response(response=str(llm_response), source_nodes=text_nodes)
-    
+
+def calculate_axial_soil_force(D, c, H, gamma, alpha, K_0, delta):
+    """
+    Calculate the maximum axial soil force per unit length of a buried pipeline (T_u)
+    based on the American Lifelines Alliance (ALA) 2005 guidelines.
+
+    IMPORTANT: 
+    This function is solely used to calculate the maximum axial soil force per unit length of a pipe 
+    (T_u) as per the given equation. To understand the derivation, detailed components of the formula, 
+    and specific conditions or limitations, you should refer to the relevant sections in the ALA guidelines.
+    This tool does not replace the guidelines but serves as a calculator for this specific equation.
+    Also, make sure the units that are input into the function are consistent with the units mentioned under the Args section below:
+
+    Args:
+    D (float): Pipe outside diameter (in meters)
+    c (float): Soil cohesion representative of the soil backfill (in kPa)
+    H (float): Depth to pipe centerline (in meters)
+    gamma (float): Effective unit weight of soil (in kN/m^3)
+    alpha (float): Adhesion factor
+    K_0 (float): Coefficient of earth pressure at rest
+    delta (float): Interface friction angle between the pipe and the soil (in radians)
+
+    Returns:
+    float: Maximum axial soil force per unit length of pipe (T_u) in kN/m
+    """
+    # Calculate the maximum axial soil force per unit length (T_u)
+    T_u = math.pi * D * alpha * c + math.pi * D * H * gamma * ((1 + K_0) / 2) * math.tan(delta * math.pi / 180)
+
+    return T_u
