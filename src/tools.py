@@ -1,6 +1,6 @@
 # Import standard libraries
 import math
-import importlib
+# import importlib
 
 # Llama Index core dependencies
 from llama_index.core import Settings, StorageContext, load_index_from_storage
@@ -16,7 +16,7 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 
 # Reload and import custom modules
 from src import prompt_temp
-importlib.reload(prompt_temp)
+# importlib.reload(prompt_temp)
 from src.prompt_temp import qa_system_prompt
 
 # Llama Index OpenAI LLM initialization

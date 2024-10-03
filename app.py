@@ -7,9 +7,9 @@ from llama_index.core import Settings
 from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 
 # Reload custom modules after import
-from src import tools, prompt_temp
-importlib.reload(tools)
-importlib.reload(prompt_temp)
+# from src import tools, prompt_temp
+# importlib.reload(tools)
+# importlib.reload(prompt_temp)
 
 # Import specific tools and prompt templates from custom modules
 from src.tools import MARKDOWN_QUERY_ENGINE, calculate_axial_soil_force
@@ -26,7 +26,7 @@ from llama_index.llms.openai import OpenAI as llma_OpenAI
 llm = llma_OpenAI(model="gpt-4o")
 Settings.llm = llm
 
-gpt_4o = OpenAIMultiModal(model="gpt-4o", max_new_tokens=400)
+gpt_4o = OpenAIMultiModal(model="o1-preview", max_new_tokens=400)
 query_engine = MARKDOWN_QUERY_ENGINE(
     qa_prompt = qa_system_prompt(), multi_modal_llm=gpt_4o
 )
