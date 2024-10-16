@@ -23,12 +23,13 @@ from llama_index.core.agent import ReActAgent
 from llama_index.llms.openai import OpenAI as llma_OpenAI
 
 # Initialize the LLM and set it in Settings
-llm = llma_OpenAI(model="gpt-4o")
+llm_type = st.sidebar.selectbox("Select LLM type", ["gpt-4o", "o1-preview"])
+llm = llma_OpenAI(model=llm_type)
 Settings.llm = llm
 
-gpt_4o = OpenAIMultiModal(model="o1-preview", max_new_tokens=400)
+multi_modal_llm = OpenAIMultiModal(model=llm_type, max_new_tokens=400)
 query_engine = MARKDOWN_QUERY_ENGINE(
-    qa_prompt = qa_system_prompt(), multi_modal_llm=gpt_4o
+    qa_prompt = qa_system_prompt(), multi_modal_llm=multi_modal_llm
 )
 
 pipe_design_guideline_tool = QueryEngineTool.from_defaults(
