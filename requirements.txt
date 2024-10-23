@@ -1,9 +1,9 @@
-llama_parse==0.4.9
-llama-index-embeddings-openai==0.1.10
-llama-index-llms-openai==0.1.27
+# llama_parse==0.4.9
+llama-index-embeddings-openai
+llama-index-llms-openai
 python-dotenv==1.0.1
 streamlit==1.36.0
 llama_index==0.11.19
 importlib==1.0.4
-cryptography==42.0.8
-streamlit-authenticator==0.3.2
+# cryptography==42.0.8
+# streamlit-authenticator==0.3.2
