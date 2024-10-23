@@ -1,6 +1,5 @@
 # Import standard libraries
 import math
-# import importlib
 
 # Llama Index core dependencies
 from llama_index.core import Settings, StorageContext, load_index_from_storage
@@ -15,13 +14,17 @@ from llama_index.multi_modal_llms.openai import OpenAIMultiModal
 from llama_index.embeddings.openai import OpenAIEmbedding
 
 # Reload and import custom modules
+import importlib
 from src import prompt_temp
-# importlib.reload(prompt_temp)
+importlib.reload(prompt_temp)
 from src.prompt_temp import qa_system_prompt
 
 # Llama Index OpenAI LLM initialization
 from llama_index.llms.openai import OpenAI as llma_OpenAI
 llm = llma_OpenAI(model="gpt-4o")
+
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
 # Initialize the OpenAI embedding model
 embed_model = OpenAIEmbedding(model="text-embedding-3-large")
