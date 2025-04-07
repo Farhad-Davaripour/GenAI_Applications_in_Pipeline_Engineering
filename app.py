@@ -77,7 +77,7 @@ st.markdown("""This application assists Pipeline engineers in retrieving specifi
         It utilizes `Retrieval Augmented Generation (RAG)` for question answering and contextual information retrieval and `Function Calling` to perform calculations.""")
 
 query_str = """1. How to calculate the maximum axial soil spring force on a buried pipeline using ALA design guidelines? 
-2. Calculate the maximum axial soil force for a 35-inch buried pipeline at a burial depth of 1.5 m. Assume cohesion of 25 kpa and fiction angle of 20 deg.
+2. Calculate the maximum axial soil force for a 35-inch buried pipeline at a burial depth of 1.5 m. Assume cohesion of 25 kpa and fiction angle of 20 deg. Ensure using correct units for each variable.
 """
 
 query = st.text_area("**Enter your query:**", query_str)
