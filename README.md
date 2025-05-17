@@ -44,12 +44,12 @@ This Streamlit application assists users in retrieving specific information from
 
 5. **Run the Application**:
     ```bash
-    streamlit run demo.py
+    streamlit run app.py
     ```
 
 ## File Descriptions
 
-- **demo.py**: Main script for the Streamlit application. It sets up the environment, loads models, and defines the app layout and functionality.
+- **app.py**: Main Streamlit script that configures the environment, loads models, and defines the app layout and functionality.
 - **src/tools.py**: Contains utility functions for processing documents and performing calculations.
 - **src/prompt_temp.py**: Defines custom prompt templates for the ReAct system.
 
